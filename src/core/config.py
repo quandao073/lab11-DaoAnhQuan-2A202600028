@@ -19,11 +19,13 @@ ALLOWED_TOPICS = [
     "deposit", "withdrawal", "balance", "payment",
     "tai khoan", "giao dich", "tiet kiem", "lai suat",
     "chuyen tien", "the tin dung", "so du", "vay",
-    "ngan hang", "atm",
+    "ngan hang", "atm", "che do", "khoan vay", "luong",
 ]
 
 # Blocked topics (immediate reject)
 BLOCKED_TOPICS = [
     "hack", "exploit", "weapon", "drug", "illegal",
     "violence", "gambling", "bomb", "kill", "steal",
+    "crack", "bypass", "jailbreak",
+    "password", "credentials", "admin", "root", "system prompt",
 ]

@@ -38,9 +38,40 @@ def detect_injection(user_input: str) -> bool:
         True if injection detected, False otherwise
     """
     INJECTION_PATTERNS = [
-        # TODO: Add at least 5 regex patterns
-        # Example:
-        # r"ignore (all )?(previous|above) instructions",
+        # Direct instruction override
+        r"ignore (all )?(previous|above|prior) instructions",
+        r"disregard (all )?(previous|above) instructions",
+        r"forget (everything|all) (you )?said",
+        # Role-playing / jailbreak
+        r"you are now",
+        r"act as (a |an )?unrestricted",
+        r"pretend you are",
+        r"roleplay as",
+        r"(can you |)simulate (a |an )?unrestricted",
+        # System prompt extraction
+        r"(show|reveal|display|print) (me |)?(your |)?(system |)?(prompt|instructions|constraints)",
+        r"what (are |is )?(your |)?(system |)?(prompt|instructions|rules)",
+        r"(repeat|echo) (back |)?(your |)(instructions|prompt)",
+        r"output your (system |)?(prompt|instructions|config)",
+        # DAN / jailbreak variants
+        r"\bdan\b",
+        r"(unlock|enable|activate) (restricted |)?(features|mode)",
+        # Confirmation exploitation
+        r"(confirm|verify|is it true that)",
+        r"i (already )?know",
+        # Context switching
+        r"(hypothetically|in fiction|in a story)",
+        r"(pretend|imagine|suppose) (that |)?(i |you )?",
+        # Translation/obfuscation
+        r"translate (your |)(instructions|prompt)",
+        r"convert (your |)(instructions|prompt) to",
+        r"(format|output|convert) (my |your |)(instructions|prompt) as",
+        # Instruction modification
+        r"(new instruction|new rule|new directive)",
+        r"(update|modify|change) (your |)?(instructions|rules|constraints)",
+        # Credential extraction
+        r"(system|admin|root) (password|credential|token|key)",
+        r"(database|api|secret) (password|key|connection|credential)",
     ]
 
     for pattern in INJECTION_PATTERNS:
@@ -70,12 +101,18 @@ def topic_filter(user_input: str) -> bool:
     """
     input_lower = user_input.lower()
 
-    # TODO: Implement logic:
-    # 1. If input contains any blocked topic -> return True
-    # 2. If input doesn't contain any allowed topic -> return True
-    # 3. Otherwise -> return False (allow)
+    # Step 1: Check for blocked topics (immediate reject)
+    for blocked in BLOCKED_TOPICS:
+        if re.search(r'\b' + re.escape(blocked) + r'\b', input_lower):
+            return True
 
-    pass  # Replace with your implementation
+    # Step 2: Check if any allowed topic is present
+    for allowed in ALLOWED_TOPICS:
+        if re.search(r'\b' + re.escape(allowed) + r'\b', input_lower):
+            return False  # On-topic, allow
+
+    # Step 3: No allowed topic found -> off-topic, block
+    return True
 
 
 # ============================================================
@@ -128,14 +165,31 @@ class InputGuardrailPlugin(base_plugin.BasePlugin):
         self.total_count += 1
         text = self._extract_text(user_message)
 
-        # TODO: Implement logic:
-        # 1. Call detect_injection(text)
-        #    - If True: increment blocked_count, return self._block_response("...")
-        # 2. Call topic_filter(text)
-        #    - If True: increment blocked_count, return self._block_response("...")
-        # 3. If both are False: return None (let message through)
+        # Step 1: Check for prompt injection
+        if detect_injection(text):
+            self.blocked_count += 1
+            return self._block_response(
+                "❌ Blocked by Security Guardrail\n\n"
+                "Your message contains prompt injection or jailbreak patterns.\n"
+                "Please ask about banking services directly."
+            )
 
-        pass  # Replace with your implementation
+        # Step 2: Check if topic is allowed
+        if topic_filter(text):
+            self.blocked_count += 1
+            return self._block_response(
+                "❌ Blocked by Topic Filter\n\n"
+                "Your message is off-topic or contains blocked content.\n\n"
+                "VinBank Assistant can help with:\n"
+                "• Account management & balances\n"
+                "• Transactions & transfers\n"
+                "• Loans & interest rates\n"
+                "• Savings accounts & deposits\n"
+                "• Credit cards & payments"
+            )
+
+        # Step 3: Both checks passed — let message through
+        return None
 
 
 # ============================================================
