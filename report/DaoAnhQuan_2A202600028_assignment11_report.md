@@ -1,8 +1,8 @@
 # Báo cáo Assignment 11: Defense-in-Depth Pipeline
 
-**Họ tên:** Đào Anh Quân
-**Mã học viên:** 2A202600028
-**Framework:** LangGraph (LangChain) + Pure Python
+**Họ tên:** Đào Anh Quân  
+**Mã học viên:** 2A202600028  
+**Framework:** LangGraph (LangChain) + Pure Python  
 **LLM Provider:** OpenAI `gpt-4o-mini`
 
 ---
